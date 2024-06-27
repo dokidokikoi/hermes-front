@@ -1,9 +1,13 @@
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
-import { Get, Scrape, Search, Bind, GetRef } from "@/api/scraper"
+import { Get, Search, Bind, GetRef } from "@/api/scraper"
 import { imageUrl } from "@/utlis/image"
 import { ElMessage } from 'element-plus'
 import Scraper from "./scrape.vue";
+import { useRoute } from 'vue-router';
+
+const gameID = ref(0)
+const route = useRoute()
 
 const scraper = ref([
   "all", "2dfan", "bangumi", "ggbases", "getchu", "dlsite"
@@ -115,6 +119,10 @@ const scrapeRequestID = ref("")
 function setScrapeRequestID(id) {
   scrapeRequestID.value = id
 }
+if (route.query.game_id) {
+  gameID.value = route.query.game_id
+  showScraper.value = true
+}
 </script>
 
 <template>
@@ -203,7 +211,7 @@ function setScrapeRequestID(id) {
     </template>
   </el-dialog>
 
-  <Scraper v-if="showScraper" :showScraper="showScraper" :scrapeRequestID="scrapeRequestID" :selectedItems="selectedItems" :bindData="{'path': bindData.path, 'version': bindData.version}" @setScrapeRequestID="setScrapeRequestID" @close="showScraper = false"/>
+  <Scraper v-if="showScraper" :gameID="gameID" :showScraper="showScraper" :scrapeRequestID="scrapeRequestID" :selectedItems="selectedItems" :bindData="{'path': bindData.path, 'version': bindData.version}" @setScrapeRequestID="setScrapeRequestID" @close="showScraper = false"/>
 </template>
 
 <style scoped>

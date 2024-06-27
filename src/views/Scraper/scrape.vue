@@ -1,19 +1,23 @@
 <script setup>
 import { ref, watch } from "vue";
-import { CircleCloseFilled, Select, Refresh, Plus, Back, Link, Minus } from '@element-plus/icons-vue'
+import { CircleCloseFilled, Select, Refresh, Plus, Back, Link, Minus, Check, EditPen, Delete } from '@element-plus/icons-vue'
 import { Get, Scrape, Bind, GetRef } from "@/api/scraper"
 import { createTag, listTag } from "@/api/tag"
 import { createCategory, listCategory } from "@/api/category"
 import { createSeries, listSeries } from "@/api/series"
 import { createDeveloper, listDeveloper } from "@/api/developer"
 import { createPublisher, listPublisher } from "@/api/publisher"
-import { createGame } from "@/api/game"
+import { upsertPerson } from "@/api/person"
+import { createGame, getGame, updateGame } from "@/api/game"
 import { imageUrl } from "@/utlis/image"
 import { copy } from "@/utlis/text"
 import { formatDay } from "@/utlis/time"
 import { getItem, setItem, removeItem } from "@/utlis/localStorage"
+import PersonSearch from "@/components/SearchNotify/person.vue";
+import CharacterSearch from "@/components/SearchNotify/character.vue";
+import { ElMessage } from 'element-plus'
 
-const props = defineProps(['showScraper', 'scrapeRequestID', 'selectedItems', 'bindData'])
+const props = defineProps(['showScraper', 'scrapeRequestID', 'selectedItems', 'bindData', 'gameID'])
 const emit = defineEmits(['close', 'setScrapeRequestID'])
 const showScraper = ref(props.showScraper)
 const scrapeRequestID = ref(props.scrapeRequestID)
@@ -32,6 +36,37 @@ function scrape() {
   })
 }
 scrape()
+
+const bindVisible = ref(false)
+const bindData = ref({})
+function showBindGame() {
+  GetRef({"request_id": scrapeRequestID.value}).then(res => {
+    bindData.value = res.data
+    bindVisible.value = true
+    return
+  }).catch(err => {
+    if (err.code === 10100) {
+      bindData.value = {
+        request_id: scrapeRequestID.value,
+      }
+      bindVisible.value = true
+      return
+    }
+  })
+}
+function bindGame() {
+  Bind(bindData.value).then(res => {
+    if (!res.code) {
+      ElMessage({
+        message: '成功',
+        type: 'success',
+      })
+      bindVisible.value = false
+      return
+    }
+    ElMessage.error(res.message)
+  })
+}
 
 const allTags = ref([])
 const allCategory = ref([])
@@ -81,22 +116,27 @@ function get() {
 }
 const scrapeIndex = ref(-1)
 
-const form = ref({
-  alias: [],
-  category: {
-    name: ""
-  },
-  cover: "",
-  tags: [],
-  series: [],
-  images: [],
-  publisher: {
-    name: ""
-  },
-  developer: {
-    name: ""
+const form = ref({})
+function initForm() {
+  form.value = {
+    alias: [],
+    category: {
+      name: ""
+    },
+    cover: "",
+    tags: [],
+    series: [],
+    images: [],
+    publisher: {
+      name: ""
+    },
+    developer: {
+      name: ""
+    }
   }
-})
+}
+initForm()
+
 watch(form, (newQuestion) => {
   setItem("scrapeItem", form.value)
 },{ deep: true })
@@ -111,20 +151,24 @@ const currentItem = ref({
   series: [],
   images: [],
   publisher: {
-    name: ""
+    id: 0
   },
   developer: {
-    name: ""
+    id: 0
   }
 })
 watch(scrapeIndex, (newQuestion) => {
-  if (scrapeItems.value) {
+  if (scrapeItems.value && scrapeItems.value[newQuestion]) {
     currentItem.value = scrapeItems.value[newQuestion]
   }
 },{ immediate: true })
 
-if (getItem("scrapeItem")) {
-  form.value = getItem("scrapeItem")
+const developerId = ref(0)
+const publisherId = ref(0)
+
+function cleanGame() {
+  removeItem("scrapeItem")
+  initForm()
 }
 function removeAlias(alias) {
   if (form.value.alias) {
@@ -374,14 +418,14 @@ function tranStaff() {
   }
 }
 function tranLinks() {
-  if (currentItem.value.links) {
+  if (!form.value.links) {
     form.value.links = []
-    for (let l of currentItem.value.links) {
-      form.value.staff.push({
-        name: l.name,
-        url: l.url
-      })
-    }
+  }
+  for (let l of currentItem.value.links) {
+    form.value.links.push({
+      name: l.name,
+      url: l.url
+    })
   }
 }
 function tranPrice() {
@@ -454,6 +498,12 @@ function addCharacter() {
   }
   form.value.characters.push({})
 }
+function selectCharacter(c) {
+  if (!form.value.characters) {
+    form.value.characters = []
+  }
+  form.value.characters.push(c)
+}
 function rmCharacter(index) {
   form.value.characters = [...form.value.characters.slice(0, index), ...form.value.characters.slice(index+1)]
 }
@@ -463,6 +513,21 @@ function addStaff() {
     form.value.staff = []
   }
   form.value.staff.push({})
+}
+function selectStaff(s) {
+  if (!form.value.staff) {
+    form.value.staff = []
+  }
+  form.value.staff.push(s)
+}
+function submitStaff(index) {
+  upsertPerson(form.value.staff[index]).then(res => {
+    form.value.staff[index].id = res.data
+    ElMessage({
+      message: '成功',
+      type: 'success',
+    })
+  })
 }
 function rmStaff(index) {
   form.value.staff = [...form.value.staff.slice(0, index), ...form.value.staff.slice(index+1)]
@@ -507,6 +572,7 @@ async function handleCategoryInputConfirm() {
 }
 const seriesVisible = ref(false)
 const seriesModel = ref("")
+const selectedSeries = ref([])
 async function handleSeriesInputConfirm() {
   if (seriesModel.value) {
     await createSeries({name: seriesModel.value})
@@ -536,13 +602,89 @@ async function handleDeveloperInputConfirm() {
   developerVisible.value = false
 }
 
+if (props.gameID) {
+  getGame(props.gameID).then(res => {
+    form.value = res.data
+    selectedSeries.value = []
+    if (form.value.series) {
+      form.value.series.forEach(e => {
+        selectedSeries.value.push(e.id)
+      })
+    }
+  })
+} else if (getItem("scrapeItem")) {
+  form.value = getItem("scrapeItem")
+  form.value.developer && (developerId.value = form.value.developer.id)
+  form.value.publisher && (publisherId.value = form.value.publisher.id)
+  selectedSeries.value = []
+  if (form.value.series) {
+    form.value.series.forEach(e => {
+      selectedSeries.value.push(e.id)
+    })
+  }
+}
+
 function confirm() {
-  createGame(form.value, {"request_id": scrapeRequestID.value}).then(res => {
-    ElMessage({
-      message: '成功',
-      type: 'success',
+  form.value.series = []
+  selectedSeries.value.forEach(e => {
+    form.value.series.push({
+      id: e
     })
   })
+  if (form.value.id) {
+    updateGame(form.value).then(res => {
+      ElMessage({
+        message: '更新成功',
+        type: 'success',
+      })
+
+      getGame(form.value.id).then(res => {
+        form.value = res.data
+        selectedSeries.value = []
+        if (form.value.series) {
+          form.value.series.forEach(e => {
+            selectedSeries.value.push(e.id)
+          })
+        }
+      })
+    })
+  } else {
+    createGame(form.value, {"request_id": scrapeRequestID.value}).then(res => {
+      ElMessage({
+        message: '创建成功',
+        type: 'success',
+      })
+
+      getGame(res.data).then(res => {
+        form.value = res.data
+        selectedSeries.value = []
+        if (form.value.series) {
+          form.value.series.forEach(e => {
+            selectedSeries.value.push(e.id)
+          })
+        }
+      })
+    })
+  }
+}
+
+function selectCharacterCV(cv, index) {
+    form.value.characters[index].cv = {
+      id: cv.id,
+      name: cv.name,
+    }
+}
+function clearCharacterCV(index) {
+  form.value.characters[index].cv = undefined
+}
+
+function selectPublisher(val) {
+  console.log(val)
+  form.value.publisher = val
+}
+function selectDeveloper(val) {
+  console.log(val)
+  form.value.developer = val
 }
 </script>
 
@@ -557,7 +699,10 @@ function confirm() {
   >
     <template #header="{ close, titleId, titleClass }">
       <div class="my-header">
-        <div>{{ scrapeRequestID }} <el-button type="primary" style="margin-left: 7px;" @click="get" :icon="Refresh" size="small" circle /></div>
+        <div>{{ scrapeRequestID }} <el-button type="primary" style="margin-left: 7px;" @click="get" :icon="Refresh" size="small" circle />
+          <el-button type="primary" style="margin-left: 7px;" @click="showBindGame" :icon="EditPen" size="small" circle />
+          <el-button type="danger" style="margin-left: 7px;" @click="cleanGame" :icon="Delete" size="small" circle />
+        </div>
         <div>
           <el-select
             v-model="scrapeIndex"
@@ -584,7 +729,7 @@ function confirm() {
     </template>
 
     <el-form :model="form" label-width="auto">
-      <table class="info" style="width:  100%" v-if="currentItem">
+      <table class="info" style="width: 100%">
         <tr>
           <td style="width: 45%;">
             <el-form-item label="封面">
@@ -794,9 +939,10 @@ function confirm() {
         <tr>
           <td>
             <el-form-item label="发售日期">
-              <el-input
+              <el-date-picker
                 v-model="form.issue_date"
-                placeholder="Please input"
+                type="date"
+                placeholder="Select date and time"
               />
             </el-form-item>
           </td>
@@ -822,14 +968,15 @@ function confirm() {
             <el-form-item label="分类">
               <div style="display: flex; flex-wrap: nowrap; width: 100%;">
                 <el-select
-                  v-model="form.category"
+                  v-model="form.category.id"
                   placeholder="分类"
+                  filterable
                 >
                   <el-option
                     v-for="category in allCategory"
                     :key="category.id"
                     :label="category.name"
-                    :value="category"
+                    :value="category.id"
                   />
                 </el-select>
                 <el-button v-if="!categoryVisible" type="primary" :icon="Plus" style="margin-left: 10px;" @click="categoryVisible = true" />
@@ -839,7 +986,7 @@ function confirm() {
           </td>
           <td>
             <div>
-              <el-button type="success" :icon="Back" @click="tranCategory" circle />
+              <!-- <el-button type="success" :icon="Back" @click="tranCategory" circle /> -->
             </div>
           </td>
           <td>
@@ -859,15 +1006,16 @@ function confirm() {
             <el-form-item label="系列">
               <div style="display: flex;">
                 <el-select
-                  v-model="form.series"
+                  v-model="selectedSeries"
                   placeholder="系列"
+                  filterable
                   multiple
                 >
                   <el-option
                     v-for="series in allSeries"
                     :key="series.id"
                     :label="series.name"
-                    :value="series"
+                    :value="series.id"
                   />
                 </el-select>
                 <el-button v-if="!seriesVisible" type="primary" :icon="Plus" style="margin-left: 10px;" @click="seriesVisible = true" />
@@ -877,7 +1025,7 @@ function confirm() {
           </td>
           <td>
             <div>
-              <el-button type="success" :icon="Back" @click="tranSeries" circle />
+              <!-- <el-button type="success" :icon="Back" @click="tranSeries" circle /> -->
             </div>
           </td>
           <td>
@@ -924,6 +1072,7 @@ function confirm() {
                   style="margin-left: 10px;margin-bottom: 5px;"
                   size="small"
                   @change="tagChange"
+                  filterable
                 >
                   <el-option
                     v-for="tag in allTags"
@@ -996,14 +1145,15 @@ function confirm() {
             <el-form-item label="发行商">
               <div style="display: flex; flex-wrap: nowrap; width: 100%;">
                 <el-select
-                  v-model="form.publisher"
+                  v-model="form.publisher.id"
                   placeholder="发行商"
+                  filterable
                 >
                   <el-option
                     v-for="publisher in allPublisher"
                     :key="publisher.id"
                     :label="publisher.name"
-                    :value="publisher"
+                    :value="publisher.id"
                   />
                 </el-select>
                 <el-button v-if="!publisherVisible" type="primary" :icon="Plus" style="margin-left: 10px;" @click="publisherVisible = true" />
@@ -1013,7 +1163,7 @@ function confirm() {
           </td>
           <td>
             <div>
-              <el-button type="success" :icon="Back" @click="tranPublisher" circle />
+              <!-- <el-button type="success" :icon="Back" @click="tranPublisher" circle /> -->
             </div>
           </td>
           <td>
@@ -1036,14 +1186,15 @@ function confirm() {
             <el-form-item label="开发商">
               <div style="display: flex; flex-wrap: nowrap; width: 100%;">
                 <el-select
-                  v-model="form.developer"
+                  v-model="form.developer.id"
                   placeholder="开发商"
+                  filterable
                 >
                   <el-option
                     v-for="developer in allDeveloper"
                     :key="developer.id"
                     :label="developer.name"
-                    :value="developer"
+                    :value="developer.id"
                   />
                 </el-select>
                 <el-button v-if="!developerVisible" type="primary" :icon="Plus" style="margin-left: 10px;" @click="developerVisible = true" />
@@ -1053,7 +1204,7 @@ function confirm() {
           </td>
           <td>
             <div>
-              <el-button type="success" :icon="Back" @click="tranDeveloper" circle />
+              <!-- <el-button type="success" :icon="Back" @click="tranDeveloper" circle /> -->
             </div>
           </td>
           <td>
@@ -1134,14 +1285,20 @@ function confirm() {
                         </el-select>
                       </div>
                     </div>
-                    <div style="display: flex;margin-bottom: 5px">
+                    <div style="display: flex;margin-top: 5px">
                       <el-input v-model="form.characters[index].cover" size="small" placeholder="cover"></el-input>
                       <el-button type="primary" size="small" plain :icon="Plus" style="margin-left: 10px;" @click="characterImageInputVisible(index)"></el-button>
                     </div>
-                    <el-input style="margin-bottom: 5px" v-if="characterVisible[index]&&characterVisible[index].imageVisible" size="small" v-model="characterVisible[index].imageModel" @keyup.enter="handleCharacterImageInputConfirm(index)" />
-                    <div style="display: flex;margin-bottom: 5px" v-for="(image, idx) in form.characters[index].images" :key="idx">
+                    <el-input style="margin-top: 5px" v-if="characterVisible[index]&&characterVisible[index].imageVisible" size="small" placeholder="image" v-model="characterVisible[index].imageModel" @keyup.enter="handleCharacterImageInputConfirm(index)" />
+                    <div style="display: flex;margin-top: 5px" v-for="(image, idx) in form.characters[index].images" :key="idx">
                       <el-input v-model="form.characters[index].images[idx]" size="small" placeholder="image"></el-input>
                       <el-button type="danger" size="small" plain :icon="Minus" style="margin-left: 10px;" @click="removeCharacterImage(index, image)"></el-button>
+                    </div>
+                    <PersonSearch v-if="!form.characters[index].cv" size="small" @select="selectCharacterCV($event, index)" />
+                    <div v-else>  
+                      <span>cv: </span>
+                      <span>{{ form.characters[index].cv.name }}</span>
+                      <el-button type="danger" size="small" :icon="Minus"  @click="clearCharacterCV(index)"></el-button>
                     </div>
                     <el-input v-model="form.characters[index].summary" type="textarea" :autosize="{minRows: 2, maxRows: 10}"></el-input>
                     <el-button type="danger" size="small" :icon="Minus" style="position: absolute;top: 0;right: 0;" @click="rmCharacter(index)"></el-button>
@@ -1149,6 +1306,7 @@ function confirm() {
                 </div>
               </details>
               <el-button type="primary" class="detail-plus" :icon="Plus" size="small" @click="addCharacter" circle />
+              <CharacterSearch size="small" class="detail-search" @select="selectCharacter" />
             </el-form-item>
           </td>
           <td>
@@ -1201,7 +1359,7 @@ function confirm() {
           <td style="display: flex;width: 100%;">
             <el-form-item label="相关人员" style="width: 100%;">
               <details style="width: 100%;">
-                <el-card style="width: 100%;margin-top: 5px;position: relative;" v-for="(staff, index) in form.staff" :key="index">
+                <el-card style="width: 100%;margin-top: 5px;position: relative;padding-bottom: 7px;" v-for="(staff, index) in form.staff" :key="index">
                   <el-input v-model="form.staff[index].name" size="small" placeholder="name"></el-input>
                   <el-select v-model="form.staff[index].gender" placeholder="gender" size="small" style="width: 50%;" clearable>
                     <el-option
@@ -1215,12 +1373,16 @@ function confirm() {
                   </el-select>
                   <el-select v-model="form.staff[index].relation" placeholder="relation" size="small"  style="width: 50%;" multiple clearable>
                     <el-option
-                      label="配音"
-                      value="配音"
+                      label="原画"
+                      value="原画"
                     />
                     <el-option
                       label="剧本"
                       value="剧本"
+                    />
+                    <el-option
+                      label="声优"
+                      value="声优"
                     />
                     <el-option
                       label="音乐"
@@ -1229,9 +1391,11 @@ function confirm() {
                   </el-select>
                   <el-input v-model="form.staff[index].summary" type="textarea" placeholder="summary" :autosize="{minRows: 2, maxRows: 10}"></el-input>
                   <el-button type="danger" size="small" :icon="Minus" style="position: absolute;top: 0;right: 0;" @click="rmStaff(index)"></el-button>
+                  <el-button type="primary" style="position: absolute;bottom: 0;right: 0;" :icon="Check" size="small" @click="submitStaff(index)" />
                 </el-card>
               </details>
               <el-button type="primary" class="detail-plus" :icon="Plus" size="small" @click="addStaff" circle />
+              <PersonSearch size="small" class="detail-search" @select="selectStaff" />
             </el-form-item>
           </td>
           <td>
@@ -1384,6 +1548,28 @@ function confirm() {
       </table>
     </el-form>
   </el-dialog>
+
+  <el-dialog v-model="bindVisible" title="绑定" width="500">
+    <el-form :model="bindData">
+      <el-form-item label="request id" :label-width="100">
+        <el-input v-model="bindData.request_id" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="path" :label-width="100">
+        <el-input v-model="bindData.path" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="version" :label-width="100">
+        <el-input v-model="bindData.version" autocomplete="off" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="bindVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="bindGame">
+          Confirm
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped>
@@ -1400,6 +1586,12 @@ function confirm() {
   position: absolute;
   left: 60px;
   top: 4px;
+}
+.detail-search {
+  position: absolute;
+  left: 100px;
+  top: -2px;
+  width: calc(100% - 100px);
 }
 .scrape-info {
   font-size: 14px;

@@ -6,3 +6,21 @@ export const createGame = (data, params) => request({
     data,
     params
 })
+
+export const updateGame = (data) => request({
+    method: 'PATCH',
+    url: '/game',
+    data
+})
+
+export const searchGame = (data, params) => request({
+    method: 'POST',
+    url: '/game/search',
+    data,
+    params
+})
+
+export const getGame = (id) => request({
+    method: 'GET',
+    url: `/game/${id}`,
+})

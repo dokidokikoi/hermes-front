@@ -2,9 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home/index.vue";
 import { ElMessage } from 'element-plus'
 import { getItem, setItem } from "../utlis/localStorage";
-import { getHost } from "@/api/user"
-import { useGlobalStore } from '@/stores/global'
-import { storeToRefs } from 'pinia'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,6 +35,14 @@ const router = createRouter({
             title: "游戏"
           },
           component: () => import("../views/Game/index.vue"),
+        },
+        {
+          path: "game/:id",
+          name: "game_detail",
+          meta: {
+            title: "游戏详情"
+          },
+          component: () => import("../views/Game/detail.vue"),
         }
       ]
     },

@@ -30,8 +30,6 @@
 import { onMounted, ref } from 'vue'
 import { useGlobalStore } from '@/stores/global'
 import { storeToRefs } from 'pinia'
-import { listCategory } from "@/api/category"
-import { listSite } from "@/api/site"
 
 const globalStore = useGlobalStore()
 const { loading } = storeToRefs(globalStore)
@@ -42,18 +40,6 @@ function load() {
   loading.value = true
 }
 
-function getCategoryList() {
-  listCategory({type: 2}).then(res => {
-    categories.value = res.data.list
-    categories.value.forEach(e => {
-      listSite({category_id: e.id, page: 1, page_size: 5, order_by: "id asc"}).then(res => {
-        e.sites = res.data.list
-        e.total = res.data.total
-      })
-    })
-  })
-}
-
 function jump(site) {
   // 打开一个新窗口并跳转到指定页面
   var newWindow = window.open(site.url, '_blank');
@@ -61,15 +47,6 @@ function jump(site) {
   // 在新窗口上执行其他操作（可选）
   newWindow.focus();
 }
-
-function loadMore(cate) {
-  listSite({category_id: cate.id, page: 2, page_size: 5, order_by: "id asc"}).then(res => {
-    cate.sites = cate.sites.concat(res.data.list);
-    cate.total = res.data.total
-  })
-}
-
-getCategoryList()
 </script>
 
 <style scoped>
