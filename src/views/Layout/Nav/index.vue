@@ -24,19 +24,19 @@
         <el-icon><WindPower /></el-icon>
         <span>系统设置</span>
       </el-menu-item>
-      <el-menu-item index="/system/tag">
+      <el-menu-item index="/tag">
         <el-icon><WindPower /></el-icon>
         <span>标签管理</span>
       </el-menu-item>
-      <el-menu-item index="/system/category">
+      <el-menu-item index="/category">
         <el-icon><WindPower /></el-icon>
         分类管理
       </el-menu-item>
-      <el-menu-item index="/system/series">
+      <el-menu-item index="/series">
         <el-icon><WindPower /></el-icon>
         系列管理
       </el-menu-item>
-      <el-menu-item index="/system/person">
+      <el-menu-item index="/person">
         <el-icon><WindPower /></el-icon>
         人员管理
       </el-menu-item>
@@ -50,9 +50,17 @@
         <el-icon><WindPower /></el-icon>
         游戏列表
       </el-menu-item>
-      <el-menu-item index="/game/character">
+      <el-menu-item index="/character">
         <el-icon><WindPower /></el-icon>
         角色列表
+      </el-menu-item>
+      <el-menu-item index="/publisher">
+        <el-icon><WindPower /></el-icon>
+        开发商
+      </el-menu-item>
+      <el-menu-item index="/developer">
+        <el-icon><WindPower /></el-icon>
+        发行商
       </el-menu-item>
     </el-sub-menu>
     <el-sub-menu index="/scraper">

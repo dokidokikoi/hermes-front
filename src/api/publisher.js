@@ -17,10 +17,10 @@ export const updatePublisher = (data) => request({
     data
 })
 
-export const deletePublisher = (ids) => request({
+export const deletePublisher = (data) => request({
     method: 'DELETE',
     url: '/publisher',
-    data: {ids: ids}
+    data
 })
 
 export const createPublisher = (data) => request({

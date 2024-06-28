@@ -17,10 +17,10 @@ export const updateDeveloper = (data) => request({
     data
 })
 
-export const deleteDeveloper = (ids) => request({
+export const deleteDeveloper = (data) => request({
     method: 'DELETE',
     url: '/developer',
-    data: {ids: ids}
+    data
 })
 
 export const createDeveloper = (data) => request({

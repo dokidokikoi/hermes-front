@@ -12,3 +12,14 @@ export const upsertPerson = (data) => request({
     url: '/person',
     data,
 })
+
+export const deletePerson = (data) => request({
+    method: 'DELETE',
+    url: '/person',
+    data
+})
+
+export const getPerson = (id) => request({
+    method: 'GET',
+    url: `/person/${id}`
+})

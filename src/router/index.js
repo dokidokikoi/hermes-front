@@ -43,6 +43,78 @@ const router = createRouter({
             title: "游戏详情"
           },
           component: () => import("../views/Game/detail.vue"),
+        },
+        {
+          path: "system/setting",
+          name: "game_setting",
+          meta: {
+            title: "系统设置"
+          },
+          component: () => import("../views/System/setting.vue"),
+        },
+        {
+          path: "category",
+          name: "category",
+          meta: {
+            title: "分类"
+          },
+          component: () => import("../views/Category/index.vue"),
+        },
+        {
+          path: "tag",
+          name: "tag",
+          meta: {
+            title: "标签"
+          },
+          component: () => import("../views/Tag/index.vue"),
+        },
+        {
+          path: "series",
+          name: "series",
+          meta: {
+            title: "系列"
+          },
+          component: () => import("../views/Series/index.vue"),
+        },
+        {
+          path: "developer",
+          name: "developer",
+          meta: {
+            title: "开发商"
+          },
+          component: () => import("../views/Developer/index.vue"),
+        },
+        {
+          path: "publisher",
+          name: "publisher",
+          meta: {
+            title: "发行商"
+          },
+          component: () => import("../views/Publisher/index.vue"),
+        },
+        {
+          path: "character",
+          name: "character",
+          meta: {
+            title: "角色"
+          },
+          component: () => import("../views/Character/index.vue"),
+        },
+        {
+          path: "character/:id",
+          name: "character_detail",
+          meta: {
+            title: "角色详情"
+          },
+          component: () => import("../views/Character/detail.vue"),
+        },
+        {
+          path: "person",
+          name: "person",
+          meta: {
+            title: "人员"
+          },
+          component: () => import("../views/Person/index.vue"),
         }
       ]
     },

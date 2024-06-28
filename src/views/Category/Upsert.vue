@@ -14,10 +14,6 @@ const props = defineProps({
     type: String,
     default: "create"
   },
-  ty: {
-    type: Number,
-    default: 1
-  },
   data: {
     type: Object,
     default: {}
@@ -40,7 +36,7 @@ watch(
   }, { immediate: true }
 )
 const rules = ref({
-  category_name: [
+  name: [
     { required: true, message: '请填写分类名', trigger: 'blur' },
   ],
   summary: [
@@ -54,7 +50,6 @@ async function submit() {
   if (!formRef) return
   await formRef.value.validate((valid, fields) => {
     if (valid) {
-      categoryForm.value.type = props.ty
       if (props.op == "create") {
         createCategory(categoryForm.value).then(res => {
           ElMessage.success("添加成功")
@@ -78,8 +73,8 @@ async function submit() {
 <template>
   <el-dialog v-model="visible" :title="op=='create'? '新增分类':'修改分类'" @close="emit('setCategoryDialogFormVisible', false)">
     <el-form :model="categoryForm" ref="formRef" :rules="rules">
-      <el-form-item label="分类名" prop="category_name" label-width="80px">
-        <el-input v-model="categoryForm.category_name" />
+      <el-form-item label="分类名" prop="name" label-width="80px">
+        <el-input v-model="categoryForm.name" />
       </el-form-item>
       <el-form-item label="分类简介" prop="summary" label-width="80px">
         <el-input v-model="categoryForm.summary" type="textarea"/>

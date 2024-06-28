@@ -17,10 +17,10 @@ export const updateSeries = (data) => request({
     data
 })
 
-export const deleteSeries = (ids) => request({
+export const deleteSeries = (data) => request({
     method: 'DELETE',
     url: '/series',
-    data: {ids: ids}
+    data
 })
 
 export const createSeries = (data) => request({

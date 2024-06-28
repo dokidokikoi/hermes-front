@@ -14,7 +14,9 @@ function get() {
     g.value = res.data
 
     let images = [g.value.cover]
-    images.push(...g.value.images)
+    if (g.value.images) {
+      images.push(...g.value.images)
+    }
     g.value.images = images
   })
 }

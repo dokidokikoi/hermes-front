@@ -1,22 +1,18 @@
 <script setup>
 import { ref, watch } from "vue"
-import { createTag, updateTag } from "@/api/tag"
+import { createSeries, updateSeries } from "@/api/series"
 import { ElMessage } from 'element-plus'
 
 const visible = ref(false)
 
 const props = defineProps({
-  tagDialogFormVisible: {
+  seriesDialogFormVisible: {
     type: Boolean,
     default: false
   },
   op: {
     type: String,
     default: "create"
-  },
-  ty: {
-    type: Number,
-    default: 1
   },
   data: {
     type: Object,
@@ -27,22 +23,25 @@ const props = defineProps({
 const emit = defineEmits()
 
 watch(
-  () => props.tagDialogFormVisible,
+  () => props.seriesDialogFormVisible,
   (newProps) => {
     visible.value = newProps
   }, { immediate: true }
 )
-const tagForm = ref({})
+const seriesForm = ref({})
 watch(
   () => props.data,
   (newProps) => {
-    tagForm.value = newProps
+    seriesForm.value = newProps
   }, { immediate: true }
 )
 const rules = ref({
-  tag_name: [
-    { required: true, message: '请填写标签名', trigger: 'blur' },
+  name: [
+    { required: true, message: '请填写系列名', trigger: 'blur' },
   ],
+  summary: [
+    { required: true, message: '请填写系列介绍', trigger: 'blur' },
+  ]
 })
 
 const formRef = ref(null)
@@ -51,18 +50,17 @@ async function submit() {
   if (!formRef) return
   await formRef.value.validate((valid, fields) => {
     if (valid) {
-      tagForm.value.type = props.ty
       if (props.op === "create") {
-        createTag(tagForm.value).then(res => {
+        createSeries(seriesForm.value).then(res => {
           ElMessage.success("添加成功")
           emit('refresh')
-          emit('setTagDialogFormVisible', false)
+          emit('setSeriesDialogFormVisible', false)
         })
       } else {
-        updateTag(tagForm.value).then(res => {
+        updateSeries(seriesForm.value).then(res => {
           ElMessage.success("更新成功")
           emit('refresh')
-          emit('setTagDialogFormVisible', false)
+          emit('setSeriesDialogFormVisible', false)
         })
       }
     } else {
@@ -73,15 +71,18 @@ async function submit() {
 </script>
 
 <template>
-  <el-dialog v-model="visible" :title="op=='create'? '新增标签':'修改标签'" @close="emit('setTagDialogFormVisible', false)">
-    <el-form :model="tagForm" ref="formRef" :rules="rules">
-      <el-form-item label="标签名" prop="tag_name" label-width="80px">
-        <el-input v-model="tagForm.tag_name" clearable />
+  <el-dialog v-model="visible" :title="op=='create'? '新增系列':'修改系列'" @close="emit('setSeriesDialogFormVisible', false)">
+    <el-form :model="seriesForm" ref="formRef" :rules="rules">
+      <el-form-item label="系列名" prop="name" label-width="80px">
+        <el-input v-model="seriesForm.name" />
+      </el-form-item>
+      <el-form-item label="系列简介" prop="summary" label-width="80px">
+        <el-input v-model="seriesForm.summary" type="textarea"/>
       </el-form-item>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="emit('setTagDialogFormVisible', false)">取消</el-button>
+        <el-button @click="emit('setSeriesDialogFormVisible', false)">取消</el-button>
         <el-button type="primary" @click="submit()">
           确认
         </el-button>

@@ -2,100 +2,87 @@
 import { ref } from "vue"
 import { Plus, Edit, Delete  } from '@element-plus/icons-vue'
 import Upsert from "./Upsert.vue"
-import { listTag, deleteTag } from "@/api/tag"
+import { searchPerson, deletePerson } from "@/api/person"
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-const typeList = ref([
-  "unknow", "文章", "网站"
-])
+const page = ref({
+  "page":1, 
+  "page_size":20,
+  "order_by": "created_at desc"
+})
+const searchParam = ref({
+  keyword: "",
+  tags: [],
+  full_text: false
+})
+
+const total = ref(0)
 const tableData = ref([
 ])
-const typeParam = ref(1)
-const typeData = ref([
-  {
-    label: "文章",
-    value: 1,
-  },
-  {
-    label: "网站",
-    value: 2,
-  },
-])
 const op = ref("")
-const tagParam = ref({})
+const personParam = ref({})
 const dialogFormVisible = ref(false)
-function getTagList() {
-  listTag({type: typeParam.value}).then(res => {
+function getPersonList() {
+  searchPerson(searchParam.value, page.value).then(res => {
     tableData.value = res.data.list
+    total.value = res.total
   })
 }
 function setDialogFormVisible(bool) {
   dialogFormVisible.value = bool
 }
 
-function typeChange() {
-  getTagList()
-}
-
-function editTag(data) {
+function editPerson(data) {
   op.value = "update"
-  tagParam.value = data
+  personParam.value = data
   setDialogFormVisible(true)
 }
 
-function createTag() {
+function createPerson() {
   op.value = "create"
-  tagParam.value = {}
+  personParam.value = {}
   setDialogFormVisible(true)
 }
 
-function delTag(id) {
+function delPerson(id) {
   ElMessageBox.confirm(
-    '是否删除分类？',
+    '是否删除人员？',
     'Warning',
     {
       confirmButtonText: '确认',
       cancelButtonText: '取消',
       type: 'warning',
     }
-  )
-    .then(() => {
-      deleteTag([id]).then(res => {
-        ElMessage.success('删除成功')
-        getTagList()
-      })
+  ).then(() => {
+    deletePerson([id]).then(res => {
+      ElMessage.success('删除成功')
+      getPersonList()
     })
-    .catch(() => {
-    })
+  }).catch(() => {
+  })
 }
 
-getTagList()
+getPersonList()
 </script>
 
 <template>
   <el-button type="primary" @click="createTag" :icon="Plus" />
-  <el-select v-model="typeParam" style="margin-left: 20px;" @change="typeChange" clearable placeholder="请选择类型">
-    <el-option
-      v-for="item in typeData"
-      :key="item.label"
-      :label="item.label"
-      :value="item.value"
-    />
-  </el-select>
   <el-table :data="tableData" stripe style="width: 100%;margin-top: 20px;">
     <el-table-column prop="id" label="ID" width="60"/>
-    <el-table-column prop="tag_name" label="标签名" />
-    <el-table-column prop="type" label="标签类型" width="110">
-      <template #default="{row}" style="padding: 10px, 0;">
-        {{ typeList[row.type] }}
+    <el-table-column prop="name" label="姓名" />
+    <el-table-column prop="alias" label="别名">
+      <template #default="{row}">
+        {{ row.alias ? row.alias.join("; "):"" }}
       </template>
     </el-table-column>
+    <el-table-column prop="gender" label="性别" />
+    <el-table-column prop="summary" label="简介" width="310" />
     <el-table-column prop="action" label="操作" fixed="right" width="110">
       <template #default="{row}" style="padding: 10px, 0;">
         <el-button
           type="primary"
           size="small"
-          @click="editTag(row)"
+          @click="editPerson(row)"
         >
           <el-icon><Edit /></el-icon>
         </el-button>
@@ -103,7 +90,7 @@ getTagList()
           type="danger"
           size="small"
           style="margin-left: 6px;"
-          @click="delTag(row.id)"
+          @click="delPerson(row.id)"
         >
           <el-icon><Delete /></el-icon>
         </el-button>
@@ -112,12 +99,10 @@ getTagList()
   </el-table>
   
   <Upsert 
-  :op="op"
-  :ty="typeParam"
-  :data="tagParam"
-  :tag-dialog-form-visible="dialogFormVisible" 
-  @setTagDialogFormVisible="setDialogFormVisible"
-  @refresh="getTagList" />
+  :data="personParam"
+  :person-dialog-form-visible="dialogFormVisible" 
+  @setPersonDialogFormVisible="setDialogFormVisible"
+  @refresh="getPersonList" />
 </template>
 
 <style scoped>

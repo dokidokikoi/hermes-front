@@ -222,7 +222,8 @@ function chooseTag(tag) {
       </div>
     </li>
   </ul>
-  <el-pagination style="margin-top: 20px;" :pager-count="15" @current-change="pageChange" background layout="prev, pager, next" :size="page.page_size" :total="total" />
+  <el-pagination style="margin-top: 20px;" v-model:current-page="page.page" v-model:page-size="page.page_size" :pager-count="15" @current-change="pageChange" background layout="prev, pager, next" :size="page.page_size" :total="total" />
+
 </template>
 
 <style scoped>

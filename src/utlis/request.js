@@ -25,6 +25,7 @@ request.interceptors.request.use(function (config) {
 
 // 响应拦截器
 request.interceptors.response.use(function (response) {
+  console.log(response)
     // 统一处理接口响应数据，比如 token 过期无效、服务端异常等
     if (response.data.code === 10201 || response.data.code === 10202 || response.data.code === 10203 || response.data.code === 10001) {
       router.push({
@@ -34,11 +35,6 @@ request.interceptors.response.use(function (response) {
         }
       })
       ElMessage.error("请登录")
-      return Promise.reject(response)
-    }
-    if (response.status !== 200) {
-      console.log(response.status)
-      ElMessage.error(response.data.msg)
       return Promise.reject(response)
     }
     // 请求正常，返回数据
@@ -52,8 +48,16 @@ request.interceptors.response.use(function (response) {
     // 手动返回一个 Promise 异常
     return Promise.reject(response.data)
   }, function (error) {
-    console.log(router)
     const response = error.response
+    if (response.status !== 200) {
+      if (response.data) {
+        ElMessage.error(response.data.message)
+      } else {
+        ElMessage.error(response)
+      }
+      
+      return Promise.reject(response)
+    }
     if (response.data.code === 10201 || response.data.code === 10202 || response.data.code === 10203 || response.data.code === 10001) {
       router.push({
         name: 'login',

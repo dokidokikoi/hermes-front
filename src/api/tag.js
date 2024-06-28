@@ -17,10 +17,10 @@ export const updateTag = (data) => request({
     data
 })
 
-export const deleteTag = (ids) => request({
+export const deleteTag = (data) => request({
     method: 'DELETE',
     url: '/tags',
-    data: {ids: ids}
+    data
 })
 
 export const createTag = (data) => request({

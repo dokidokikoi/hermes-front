@@ -17,10 +17,10 @@ export const updateCategory = (data) => request({
     data
 })
 
-export const deleteCategory = (ids) => request({
+export const deleteCategory = (data) => request({
     method: 'DELETE',
     url: '/categories',
-    data: {ids: ids}
+    data
 })
 
 export const createCategory = (data) => request({

@@ -60,7 +60,7 @@ getSeriesList()
   <el-button type="primary" @click="createSeries(true)" :icon="Plus" />
   <el-table :data="tableData" stripe style="width: 100%">
     <el-table-column prop="id" label="ID" width="60"/>
-    <el-table-column prop="series_name" label="系列名" />
+    <el-table-column prop="name" label="系列名" />
     <el-table-column prop="summary" label="系列介绍" />
     <el-table-column prop="action" label="操作" fixed="right" width="110">
       <template #default="{row}" style="padding: 10px, 0;">
