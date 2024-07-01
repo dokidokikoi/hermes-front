@@ -18,7 +18,7 @@ const param = ref({
   page: 1,
   request_id: ""
 })
-const requestID = ref("af3d644a-aa39-4883-a5fd-dc3ee8c51b69")
+const requestID = ref("")
 const searchItems = ref({})
 const source = ref("")
 const sources = ref([])
@@ -35,6 +35,10 @@ function search() {
 
 function get() {
   Get({"request_id": requestID.value}).then(res => {
+    if (!res.data) {
+      ElMessage.info("暂无结果")
+      return
+    }
     sources.value = []
     for (let k in res.data) {
       sources.value.push(k)
@@ -147,7 +151,7 @@ if (route.query.game_id) {
         <el-button type="primary" size="large" style="margin-left: 10px;" @click="search">搜索</el-button>
       </div>
       <div style="margin-top: 20px;">
-        <el-input v-model="requestID" size="large" style="width: 440px" placeholder="request id" />
+        <el-input v-model="requestID" clearable size="large" style="width: 440px" placeholder="request id" />
         <el-button type="primary" size="large" style="margin-left: 10px;" @click="get">获取</el-button>
         <el-button type="success" size="large" style="margin-left: 10px;" @click="showBindGame">绑定</el-button>
         <el-select

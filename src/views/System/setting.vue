@@ -97,7 +97,7 @@ getPolicyList()
           <el-input v-model="policies.system.proxy.host" />
         </el-form-item>
         <el-form-item label="port">
-          <el-input v-model="policies.system.proxy.port" />
+          <el-input v-model.number="policies.system.proxy.port" />
         </el-form-item>
         <el-form-item label="username">
           <el-input v-model="policies.system.proxy.username" />

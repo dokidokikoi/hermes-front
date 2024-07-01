@@ -15,9 +15,10 @@ FROM nginx:latest
 
 # 将前端构建结果复制到 Nginx 的静态文件目录
 COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/nginx/* /etc/nginx/conf.d
 
 # 暴露 Nginx 的默认端口
-EXPOSE 443
+EXPOSE 19877
 
 # Nginx 启动命令
 CMD ["nginx", "-g", "daemon off;"]

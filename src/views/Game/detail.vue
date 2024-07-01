@@ -1,6 +1,6 @@
 <script setup>
 import { getGame } from "@/api/game"
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useRoute, useRouter } from 'vue-router';
 import { imageUrl } from "@/utlis/image"
 import { Link, Edit } from '@element-plus/icons-vue'
@@ -9,19 +9,6 @@ import { formatDay } from "@/utlis/time"
 const route = useRoute()
 const router = useRouter()
 const g = ref({})
-function get() {
-  getGame(route.params.id).then(res => {
-    g.value = res.data
-
-    let images = [g.value.cover]
-    if (g.value.images) {
-      images.push(...g.value.images)
-    }
-    g.value.images = images
-  })
-}
-get()
-
 
 const carousel = ref({})
 function switchCarousel(idx) {
@@ -38,24 +25,42 @@ function turnImageUrl(arr) {
   return urls
 }
 
+function get() {
+  getGame(route.params.id).then(res => {
+    g.value = res.data
+
+    let images = [g.value.cover]
+    if (g.value.images) {
+      images.push(...g.value.images)
+    }
+    g.value.images = images
+  })
+}
+
 function jumpTo(path, query) {
   router.push({
     path: path,
     query: query
   })
 }
+
+watch(carousel, (newQuestion) => {
+  switchCarousel(0)
+})
+
+get()
 </script>
 
 <template>
   <div style="margin-bottom: 10px;display: flex;align-items: center;">
     <p style="font-size: 1.4em;font-weight: 500;"> {{ g.name }} </p>
-    <el-button size="small" type="primary" @click="jumpTo('/scraper/game', {'game_id': g.id})"><el-icon><Edit /></el-icon></el-button>
+    <el-button size="small" type="primary" style="margin-left: 5px;" @click="jumpTo('/scraper/game', {'game_id': g.id})"><el-icon><Edit /></el-icon></el-button>
   </div>
   <div class="inline">
     <div class="images">
-      <el-carousel ref="carousel" motion-blur indicator-position="none" :autoplay="false">
-        <el-carousel-item v-for="image in g.images" :key="image">
-          <el-image :src="imageUrl(image)"></el-image>
+      <el-carousel ref="carousel" v-if="g && g.images" height="auto" indicator-position="none" :autoplay="false">
+        <el-carousel-item v-for="image in g.images" :key="image" style="height: initial;">
+          <el-image :src="imageUrl(image)" style="width: 100%;height: 100px;height: auto;" fit="contains"></el-image>
         </el-carousel-item>
       </el-carousel>
       <div style="display: flex;overflow-x: auto;margin-top: 10px;">
@@ -137,17 +142,17 @@ function jumpTo(path, query) {
   <div>
     <div class="card story">
       <h2>故事</h2>
-      <pre>
+      <pre class="warp">
         <p v-html="g.story"></p>
       </pre>
     </div>
     <div class="card character">
       <h2>角色</h2>
-      <div v-for="c in g.characters" :key="c.id" style="display: flex;margin-bottom: 10px;">
+      <div class="character-item" v-for="c in g.characters" :key="c.id">
         <div class="cover">
           <el-image style="height: 100%;width: 100%;" :src="imageUrl(c.cover)" fit="contain" />
         </div>
-        <div class="info" style="margin-left: 10px;width: 100%;padding: 0 10px;">
+        <div class="info">
           <h3>{{ c.name }}</h3>
           <p>CV: <span v-if="c.cv">{{ c.cv.name }}</span></p>
           <div>
@@ -160,7 +165,7 @@ function jumpTo(path, query) {
               {{ tag.name }}
             </el-tag>
           </div>
-          <pre>
+          <pre class="warp">
             <p style="margin-top: 10px;" v-html="c.summary"></p>
           </pre>
         </div>
@@ -221,12 +226,37 @@ function jumpTo(path, query) {
   border-bottom: 1px solid black;
   margin-bottom: 10px;
 }
+.character {
+  width: 100%;
+}
 .character  .cover {
   width: 200px;
   flex-grow: 0;
   flex-shrink: 0;
 }
+.character .info {
+  margin-left: 10px;
+  width: 100px;
+  flex-grow: 1;
+  padding: 0 10px;
+}
 
+.warp p {
+  word-break: break-all;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+}
+
+.character-item {
+  display: flex;
+  padding-bottom: 10px;
+  width: 100%;
+  /* color: antiquewhite; */
+  background: linear-gradient(to bottom, rgb(252, 248, 244), #fff);
+}
 .staff  .cover {
   width: 200px;
   flex-grow: 0;

@@ -24,7 +24,7 @@ loading.value = false
       <el-aside width="200px"><Nav /></el-aside>
       <el-container>
         <el-header><Header /></el-header>
-        <el-main><RouterView :key="new Date().getTime()" /></el-main>
+        <el-main style="overflow-x: hidden;"><RouterView :key="new Date().getTime()" /></el-main>
       </el-container>
     </el-container>
   </div>
