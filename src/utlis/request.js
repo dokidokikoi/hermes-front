@@ -3,9 +3,17 @@ import { getItem } from './localStorage'
 import { ElMessage } from 'element-plus'
 import router from "@/router/"
 
-const request = axios.create({
+var request;
+
+if (process.env.NODE_ENV !== "development") {
+  request = axios.create({
     baseURL: import.meta.env.VITE_BASE_URL
-})
+  })
+} else {
+  request = axios.create({
+    baseURL: window.location.origin+"/api"
+  })
+}
 
 // 请求拦截器
 request.interceptors.request.use(function (config) {
