@@ -5,6 +5,33 @@ import Loading from '@/components/Loading/index.vue'
 import { useGlobalStore } from '@/stores/global'
 import { storeToRefs } from 'pinia'
 import { ref } from "vue";
+import { ElNotification } from 'element-plus'
+
+console.log("Starting connection to WebSocket Server");
+const connection = ref(new WebSocket("ws://127.0.0.1:19876/notify/scrap"))
+connection.value.onmessage = function (event) {
+  console.log("look, I got something from server");
+  console.log(event.data);
+  ElNotification({
+    title: 'Title',
+    message: event.data,
+    type: 'success',
+    duration: 5000,
+  })
+};
+connection.value.onopen = function (event) {
+  console.log(event);
+  console.log("Successfully connected to the echo websocket server...");
+};
+connection.value.onclose = function (event) {
+  console.log("Connection closed.");
+  ElNotification({
+    title: 'Title',
+    message: "Connection closed.",
+    type: 'error',
+    duration: 5000,
+  })
+};
 
 const globalStore = useGlobalStore()
 const { loading } = storeToRefs(globalStore)
