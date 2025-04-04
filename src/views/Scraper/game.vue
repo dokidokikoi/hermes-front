@@ -77,7 +77,9 @@ const selectedItems = computed(() => {
   let items = []
   selectMapSet.value.forEach((v, k) => {
     for (let idx of v.keys()) {
-      items.push(searchItems.value[k][idx])
+      if (searchItems.value[k] && searchItems.value[k][idx]) {
+        items.push(searchItems.value[k][idx])
+      }
     }
   })
   return items

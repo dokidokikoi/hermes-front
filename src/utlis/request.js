@@ -11,7 +11,7 @@ if (process.env.NODE_ENV !== "development") {
   })
 } else {
   request = axios.create({
-    baseURL: window.location.origin+"/api"
+    baseURL: import.meta.env.VITE_BASE_URL
   })
 }
 

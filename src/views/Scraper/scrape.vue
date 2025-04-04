@@ -342,6 +342,7 @@ function tranIssueDate() {
   form.value.issue_date = currentItem.value.issue_date
 }
 function tranCategory() {
+
   if (currentItem.value.category) {
     form.value.category = { 
       name: currentItem.value.category.name
@@ -603,15 +604,7 @@ async function handleDeveloperInputConfirm() {
 }
 
 if (props.gameID) {
-  getGame(props.gameID).then(res => {
-    form.value = res.data
-    selectedSeries.value = []
-    if (form.value.series) {
-      form.value.series.forEach(e => {
-        selectedSeries.value.push(e.id)
-      })
-    }
-  })
+  GetGame(props.gameID)
 } else if (getItem("scrapeItem")) {
   form.value = getItem("scrapeItem")
   form.value.developer && (developerId.value = form.value.developer.id)
@@ -638,15 +631,7 @@ function confirm() {
         type: 'success',
       })
 
-      getGame(form.value.id).then(res => {
-        form.value = res.data
-        selectedSeries.value = []
-        if (form.value.series) {
-          form.value.series.forEach(e => {
-            selectedSeries.value.push(e.id)
-          })
-        }
-      })
+      GetGame(form.value.id)
     })
   } else {
     createGame(form.value, {"request_id": scrapeRequestID.value}).then(res => {
@@ -655,17 +640,34 @@ function confirm() {
         type: 'success',
       })
 
-      getGame(res.data).then(res => {
-        form.value = res.data
-        selectedSeries.value = []
-        if (form.value.series) {
-          form.value.series.forEach(e => {
-            selectedSeries.value.push(e.id)
-          })
-        }
-      })
+      GetGame(res.data)
     })
   }
+}
+
+function GetGame(id) {
+  getGame(id).then(res => {
+    form.value = res.data
+    if (!form.value.category) {
+      form.value.category = {}
+    }
+    if (!form.value.characters) {
+      form.value.characters = []
+    }
+    if (!form.value.developer) {
+      form.value.developer = {}
+    }
+    if (!form.value.publisher) {
+      form.value.publisher = {}
+    }
+    selectedSeries.value = []
+    if (form.value.series) {
+      form.value.series.forEach(e => {
+        selectedSeries.value.push(e.id)
+      })
+    }
+    console.log(form.value)
+  })
 }
 
 function selectCharacterCV(cv, index) {
