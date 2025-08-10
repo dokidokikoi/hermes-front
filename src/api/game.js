@@ -20,7 +20,11 @@ export const searchGame = (data, params) => request({
     params
 })
 
-export const getGame = (id) => request({
+export const getGame = (id, ver) => request({
     method: 'GET',
-    url: `/game/${id}`,
+    url: `/game/ins`,
+    params: {
+        id: id,
+        ver: ver
+    }
 })

@@ -72,6 +72,10 @@
         <el-icon><DataLine /></el-icon>
         <span>游戏</span>
       </el-menu-item>
+      <el-menu-item index="/scraper/library">
+        <el-icon><DataLine /></el-icon>
+        <span>库</span>
+      </el-menu-item>
     </el-sub-menu>
   </el-menu>
 </template>

@@ -29,6 +29,14 @@ const router = createRouter({
           component: () => import("../views/Scraper/game.vue"),
         },
         {
+          path: "scraper/library",
+          name: "game_library",
+          meta: {
+            title: "游戏刮削"
+          },
+          component: () => import("../views/Scraper/library.vue"),
+        },
+        {
           path: "game",
           name: "game_index",
           meta: {

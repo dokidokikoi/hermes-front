@@ -23,6 +23,8 @@
        </div>
       </el-card>
     </template>
+    <Waterfall />
+    
   </div>
 </template>
 
@@ -30,6 +32,7 @@
 import { onMounted, ref } from 'vue'
 import { useGlobalStore } from '@/stores/global'
 import { storeToRefs } from 'pinia'
+import  Waterfall from '@/components/Waterfall/index.vue'
 
 const globalStore = useGlobalStore()
 const { loading } = storeToRefs(globalStore)
